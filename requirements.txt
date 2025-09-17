@@ -2,3 +2,7 @@ Django
 pandas
 matplotlib
 Pillow
+openai
+phyton-dotenv
+numpy
+requests

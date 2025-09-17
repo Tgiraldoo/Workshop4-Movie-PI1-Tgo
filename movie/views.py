@@ -12,6 +12,14 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import redirect
 
+from django.shortcuts import render
+from django.http import HttpRequest
+from movie.models import Movie
+import numpy as np
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
+
 
 def home(request):
     searchTerm = request.GET.get('searchMovie')
@@ -105,3 +113,42 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+def recommend(request):
+    recommended = None
+    similarity = None
+
+    if request.method == "POST":
+        prompt = request.POST.get("prompt")
+        if prompt:
+            # ✅ Cargar API
+            load_dotenv("openAI.env")
+            client = OpenAI(api_key=os.environ.get("openai_apikey"))
+
+            # ✅ Generar embedding del prompt
+            response = client.embeddings.create(
+                input=[prompt],
+                model="text-embedding-3-small"
+            )
+            prompt_emb = np.array(response.data[0].embedding, dtype=np.float32)
+
+            # ✅ Comparar contra todas las películas
+            best_movie = None
+            max_similarity = -1
+            for movie in Movie.objects.all():
+                movie_emb = np.frombuffer(movie.emb, dtype=np.float32)
+                sim = np.dot(prompt_emb, movie_emb) / (
+                    np.linalg.norm(prompt_emb) * np.linalg.norm(movie_emb)
+                )
+                if sim > max_similarity:
+                    max_similarity = sim
+                    best_movie = movie
+
+            recommended = best_movie
+            similarity = max_similarity
+
+    return render(request, "recommend.html", {
+        "recommended": recommended,
+        "similarity": similarity,
+    })
+
