@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-(!3q)vlc$b7(2n*eqa0#77a+6he)5&8ue(uiept*mz23wde_=9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54.82.77.12']
 
 
 # Application definition
